@@ -600,8 +600,8 @@ public class PizzaStore {
          case 1: showAllItems(esql); break;
          case 2: filterType(esql); break;
          case 3: filterPrice(esql); break;
-         case 4: sortPriceAsc(esql, "ASC"); break;
-         case 5: sortPriceDesc(esql, "DESC"); break;
+         case 4: sortPrice(esql, "ASC"); break;
+         case 5: sortPrice(esql, "DESC"); break;
          case 6: viewingMenu = false; break;
          default: System.out.println("Invalid choice.");
         }
@@ -610,7 +610,7 @@ public class PizzaStore {
 
    public static void showAllItems(PizzaStore esql){ 
       try {
-         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Desc FROM items;");
+         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Description FROM Items;");
 
          List<List<String>> menuItems = esql.executeQueryAndReturnResult(query);
          for (List<String> row : menuItems) {
@@ -627,7 +627,8 @@ public class PizzaStore {
       try {
          System.out.println("Enter type to filter by: ");
          itemType = in.readLine();
-         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Desc FROM items WHERE typeOfItem = '%s';",
+         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Description FROM Items " +
+            "WHERE TRIM(LOWER(typeOfItem)) = LOWER('%s');", 
          itemType);
          List<List<String>> menuItems = esql.executeQueryAndReturnResult(query);
          for (List<String> row : menuItems) {
@@ -641,11 +642,11 @@ public class PizzaStore {
    }
 
    public static void filterPrice(PizzaStore esql){ 
-      String priceLimit;
+      double priceLimit;
       try {
          System.out.println("Enter maximum price of item: ");
-         priceLimit = in.readLine();
-         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Desc FROM items WHERE price <= '%.2f;",
+         priceLimit = Double.parseDouble(in.readLine().trim());
+         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Description FROM Items WHERE price <= %.2f;",
          priceLimit);
          List<List<String>> menuItems = esql.executeQueryAndReturnResult(query);
          for (List<String> row : menuItems) {
@@ -658,8 +659,18 @@ public class PizzaStore {
       }
    }
 
-   public static void sortPriceAsc(PizzaStore esql, String Asc) {}
-   public static void sortPriceDesc(PizzaStore esql, String Desc) {}
+   public static void sortPrice(PizzaStore esql, String order) {
+      try {
+         String query = String.format("SELECT itemName AS Name, price AS Price, description AS Desc FROM items ORDER BY price %s;",
+         order);
+
+         esql.executeQueryAndPrintResult(query);
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   }
 
    public static void placeOrder(PizzaStore esql) {}
    public static void viewAllOrders(PizzaStore esql) {}
