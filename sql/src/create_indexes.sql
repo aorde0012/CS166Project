@@ -1,0 +1,9 @@
+CREATE INDEX idx_users_role ON Users(role);
+CREATE INDEX idx_items_type ON Items(typeOfItem);
+CREATE INDEX idx_items_price ON Items(price);
+CREATE INDEX idx_foodorder_login ON FoodOrder(login);
+CREATE INDEX idx_foodorder_timestamp ON FoodOrder(orderTimestamp);
+CREATE INDEX idx_foodorder_status ON FoodOrder(orderStatus);
+CREATE INDEX idx_store_isopen ON Store(isOpen);
+CREATE INDEX idx_store_review ON Store(reviewScore);
+CREATE INDEX idx_itemsinorder_item ON ItemsInOrder(itemName);
