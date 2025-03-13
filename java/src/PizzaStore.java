@@ -290,7 +290,7 @@ public class PizzaStore {
                    case 1: viewProfile(esql, authorisedUser); break;
                    case 2: updateProfile(esql, authorisedUser); break;
                    case 3: viewMenu(esql); break;
-                   case 4: placeOrder(esql); break;
+                   case 4: placeOrder(esql, authorisedUser); break;
                    case 5: viewAllOrders(esql); break;
                    case 6: viewRecentOrders(esql); break;
                    case 7: viewOrderInfo(esql); break;
@@ -672,7 +672,101 @@ public class PizzaStore {
       }
    }
 
-   public static void placeOrder(PizzaStore esql) {}
+   public static void placeOrder(PizzaStore esql, String loggedInUser) {
+      if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+      }
+      try {
+         int storeID = -1;
+         boolean validStore = false;
+
+         while (!validStore) {
+            System.out.print("Enter the StoreID of the desired store: ");
+            storeID = Integer.parseInt(in.readLine().trim());
+
+            // Check if store exists
+            String storeQuery = String.format("SELECT storeID FROM Store WHERE storeID = %d;", storeID);
+            List<List<String>> storeResult = esql.executeQueryAndReturnResult(storeQuery);
+
+            if (!storeResult.isEmpty()) {
+                validStore = true;  // Store found, proceed
+            } else {
+                System.out.println("Store ID not found. Please enter a valid store.");
+            }
+         }
+         List<String> itemNames = new ArrayList<>();
+         List<Integer> quantities = new ArrayList<>();
+
+         double basketPrice = 0.0;
+
+         boolean ordering = true;
+
+         while(ordering) {
+            System.out.println("Enter item name (or type 'done' to finish ordering): ");
+            String currItem = in.readLine().trim();
+
+            if (currItem.equalsIgnoreCase("done")) {
+               break;
+            } 
+
+            System.out.println("Enter desired quantity: ");
+            int quantity = Integer.parseInt(in.readLine().trim());
+
+            String priceQuery = String.format("SELECT price FROM items WHERE itemName = '%s';",
+            currItem);
+
+            List<List<String>> priceResult = esql.executeQueryAndReturnResult(priceQuery);
+            if (priceResult.isEmpty()) {
+                System.out.println("System was unable to locate item or price, please check input and try again!");
+                continue;
+            }
+            double currPrice = Double.parseDouble(priceResult.get(0).get(0));
+            basketPrice += currPrice * quantity;
+
+            itemNames.add(currItem);
+            quantities.add(quantity);
+         }
+         if (itemNames.isEmpty()) {
+            System.out.println("Order cancelled. No items were selected.");
+            return;
+         }
+
+         int orderID = 1; 
+         String getOrderIDQuery = "SELECT MAX(orderID) FROM FoodOrder;";
+         List<List<String>> lastUsedID = esql.executeQueryAndReturnResult(getOrderIDQuery);
+         if (!lastUsedID.isEmpty() && lastUsedID.get(0).get(0) != null) {
+            orderID = Integer.parseInt(lastUsedID.get(0).get(0)) + 1; 
+         }
+   
+
+         String insertOrder = String.format("INSERT INTO foodorder (orderID, login, storeID, totalPrice, orderTimestamp, orderStatus) " +
+         "VALUES (%d, '%s', %d, %.2f, NOW(), 'Pending');",
+         orderID, loggedInUser, storeID, basketPrice
+         );
+         esql.executeUpdate(insertOrder);
+
+        for (int i = 0; i < itemNames.size(); i++) {
+            String insertItemQuery = String.format(
+                "INSERT INTO ItemsInOrder (orderID, itemName, quantity) VALUES (%d, '%s', %d);",
+                orderID, itemNames.get(i), quantities.get(i)
+            );
+            esql.executeUpdate(insertItemQuery);
+        }
+         System.out.println("\n Order placed successfully!");
+         System.out.println("Order ID: " + orderID);
+         System.out.println("Store ID: " + storeID);
+         System.out.println("Total Price: $" + String.format("%.2f", basketPrice));
+         System.out.println("Items Ordered:");
+         for (int i = 0; i < itemNames.size(); i++) {
+            System.out.println("- " + itemNames.get(i) + " x" + quantities.get(i));
+         }
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   }
    public static void viewAllOrders(PizzaStore esql) {}
    public static void viewRecentOrders(PizzaStore esql) {}
    public static void viewOrderInfo(PizzaStore esql) {}
