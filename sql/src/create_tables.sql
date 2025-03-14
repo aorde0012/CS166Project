@@ -33,17 +33,18 @@ CREATE TABLE Store ( storeID integer NOT NULL,
                            PRIMARY KEY(storeID)
 );
 
-CREATE TABLE FoodOrder ( orderID integer NOT NULL,
-                           login varchar(50) NOT NULL, --places relationship
-                           storeID integer NOT NULL, --placedAt relationship
-                           totalPrice decimal(10,2) NOT NULL,
-                           orderTimestamp timestamp NOT NULL,
-                           orderStatus char(50),
-                           PRIMARY KEY(orderID),
-                           FOREIGN KEY(login) REFERENCES Users(login)
-                           ON DELETE CASCADE,
-                           FOREIGN KEY(storeID) REFERENCES Store(storeID)
-                           ON DELETE CASCADE
+CREATE TABLE FoodOrder (
+    orderID integer NOT NULL,
+    login varchar(50) NOT NULL,
+    storeID integer NOT NULL,
+    totalPrice decimal(10,2) NOT NULL,
+    orderTimestamp timestamp NOT NULL,
+    orderStatus char(50),
+    PRIMARY KEY(orderID),
+    FOREIGN KEY(login) REFERENCES Users(login)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY(storeID) REFERENCES Store(storeID)
+    ON DELETE CASCADE
 );
 
 

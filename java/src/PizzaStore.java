@@ -839,7 +839,7 @@ public class PizzaStore {
         System.out.println("Error: No user is logged in.");
         return;
       }
-      try {
+   try {
          String ordersQuery = String.format("SELECT o.orderID, o.totalPrice, o.orderTimestamp, o.orderStatus, s.storeID, s.address " + 
          "FROM FoodOrder o JOIN Store s ON o.storeID = s.storeID " +
          "WHERE o.login = '%s' " +
@@ -1353,6 +1353,128 @@ public class PizzaStore {
       }
    }
    
+   public static void updateUserProfile(PizzaStore esql) {
+      try {
+         System.out.println("\n---- Update User Profile ----");
+         
+         // Get username to update
+         System.out.print("Enter username to update profile: ");
+         String targetUser = in.readLine().trim();
+         
+         // Check if target user exists
+         String userCheckQuery = String.format(
+            "SELECT * FROM Users WHERE login = '%s';", 
+            targetUser
+         );
+         
+         List<List<String>> userResult = esql.executeQueryAndReturnResult(userCheckQuery);
+         
+         if (userResult.isEmpty()) {
+            System.out.println("User not found!");
+            return;
+         }
+         
+         // Display current user details
+         System.out.println("\nCurrent user details:");
+         esql.executeQueryAndPrintResult(userCheckQuery);
+         
+         // Update options
+         System.out.println("\nSelect field to update:");
+         System.out.println("1. Username");
+         System.out.println("2. Password");
+         System.out.println("3. Phone Number");
+         System.out.println("4. Favorite Items");
+         System.out.println("5. Go Back");
+         
+         int choice = readChoice();
+         
+         switch (choice) {
+            case 1:
+               // Update username (login)
+               System.out.print("Enter new username: ");
+               String newLogin = in.readLine().trim();
+               
+               // Check if the new username already exists
+               String checkLoginQuery = String.format(
+                  "SELECT login FROM Users WHERE login = '%s';",
+                  newLogin
+               );
+               
+               List<List<String>> loginResult = esql.executeQueryAndReturnResult(checkLoginQuery);
+               
+               if (!loginResult.isEmpty()) {
+                  System.out.println("Username already exists! Please choose a different username.");
+                  return;
+               }
+               
+               // Update username
+               String updateLoginQuery = String.format(
+                  "UPDATE Users SET login = '%s' WHERE login = '%s';",
+                  newLogin, targetUser
+               );
+               
+               esql.executeUpdate(updateLoginQuery);
+               System.out.println("Username updated successfully from '" + targetUser + "' to '" + newLogin + "'");
+               break;
+               
+            case 2:
+               // Update password
+               System.out.print("Enter new password: ");
+               String newPassword = in.readLine().trim();
+               
+               // Update password
+               String updatePasswordQuery = String.format(
+                  "UPDATE Users SET password = '%s' WHERE login = '%s';",
+                  newPassword, targetUser
+               );
+               
+               esql.executeUpdate(updatePasswordQuery);
+               System.out.println("Password updated successfully for user: " + targetUser);
+               break;
+               
+            case 3:
+               // Update phone number
+               System.out.print("Enter new phone number: ");
+               String newPhoneNum = in.readLine().trim();
+               
+               // Update phone number
+               String updatePhoneQuery = String.format(
+                  "UPDATE Users SET phoneNum = '%s' WHERE login = '%s';",
+                  newPhoneNum, targetUser
+               );
+               
+               esql.executeUpdate(updatePhoneQuery);
+               System.out.println("Phone number updated successfully for user: " + targetUser);
+               break;
+               
+            case 4:
+               // Update favorite items
+               System.out.print("Enter new favorite items: ");
+               String newFavoriteItems = in.readLine().trim();
+               
+               // Update favorite items
+               String updateFavoritesQuery = String.format(
+                  "UPDATE Users SET favoriteItems = '%s' WHERE login = '%s';",
+                  newFavoriteItems, targetUser
+               );
+               
+               esql.executeUpdate(updateFavoritesQuery);
+               System.out.println("Favorite items updated successfully for user: " + targetUser);
+               break;
+               
+            case 5:
+               return;
+               
+            default:
+               System.out.println("Invalid choice!");
+               return;
+         }
+         
+      } catch (Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+   
    public static void managerMenu(PizzaStore esql, String loggedInUser) {
       if (loggedInUser == null) {
          System.out.println("Error: No user is logged in");
@@ -1386,45 +1508,46 @@ public class PizzaStore {
          while (managerMenuActive) {
             if (userRole.equals("manager")) {
                System.out.println("\n---- Manager Menu ----");
-            } else {
-               System.out.println("\n---- Driver Menu ----");
-            }
-            
-            // Common options for both managers and drivers
-            System.out.println("1. View Orders for Any User");
-            System.out.println("2. View Recent Orders for Any User");
-            System.out.println("3. Update Order Status");
-            
-            // Manager-only options
-            if (userRole.equals("manager")) {
+               // Manager options
+               System.out.println("1. View Orders for Any User");
+               System.out.println("2. View Recent Orders for Any User");
+               System.out.println("3. Update Order Status");
                System.out.println("4. Manage Menu Items");
                System.out.println("5. Update User Role");
+               System.out.println("6. Update User Profile");
+            } else {
+               System.out.println("\n---- Driver Menu ----");
+               // Driver options 
+               System.out.println("1. View Orders for Any User");
+               System.out.println("2. View Recent Orders for Any User");
+               System.out.println("3. Update Order Status");
             }
             
             System.out.println("9. Back to Main Menu");
             
             int choice = readChoice();
             
-            switch (choice) {
-               case 1: viewOrders(esql); break;
-               case 2: viewRecentOrders(esql); break;
-               case 3: updateOrderStatus(esql); break;
-               case 4: 
-                  if (userRole.equals("manager")) {
-                     updateMenu(esql);
-                  } else {
-                     System.out.println("Access Denied: Drivers cannot manage menu items");
-                  }
-                  break;
-               case 5:
-                  if (userRole.equals("manager")) {
-                     updateUserRole(esql);
-                  } else {
-                     System.out.println("Access Denied: Drivers cannot update user roles");
-                  }
-                  break;
-               case 9: managerMenuActive = false; break;
-               default: System.out.println("Invalid choice!"); break;
+            if (userRole.equals("manager")) {
+               // Manager options handling
+               switch (choice) {
+                  case 1: viewOrders(esql); break;
+                  case 2: viewRecentOrders(esql); break;
+                  case 3: updateOrderStatus(esql); break;
+                  case 4: updateMenu(esql); break;
+                  case 5: updateUserRole(esql); break;
+                  case 6: updateUserProfile(esql); break;
+                  case 9: managerMenuActive = false; break;
+                  default: System.out.println("Invalid choice!"); break;
+               }
+            } else {
+               // Driver options handling
+               switch (choice) {
+                  case 1: viewOrders(esql); break;
+                  case 2: viewRecentOrders(esql); break;
+                  case 3: updateOrderStatus(esql); break;
+                  case 9: managerMenuActive = false; break;
+                  default: System.out.println("Invalid choice!"); break;
+               }
             }
          }
       } catch (Exception e) {
