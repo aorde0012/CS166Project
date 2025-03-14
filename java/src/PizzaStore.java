@@ -352,74 +352,117 @@ public class PizzaStore {
    /*
     * Creates a new user
     **/
-   public static void CreateUser(PizzaStore esql){
-      String login = null;
-      String password = null;
-      String confirmPassword = null;
-      String phoneNum = null;
-      String favoriteItems = null;
-      String role = "customer";
+  public static void CreateUser(PizzaStore esql){
+   String login = null;
+   String password = null;
+   String confirmPassword = null;
+   String phoneNum = null;
+   String favoriteItems = null;
+   String role = "customer";
 
+   try {
+      System.out.println("\n---- Create User ----");
+      System.out.println("At any prompt, type 'exit' to return to main menu\n");
+      
+      while(true) {
+         System.out.println("Please enter a username! (Maximum 50 characters)");
+         login = in.readLine();
+         
+         // Check for exit command
+         if(login.equalsIgnoreCase("exit")) {
+            System.out.println("Returning to main menu...");
+            return;
+         }
+         
+         if(login.trim().isEmpty()) {
+            System.out.println("Username cannot be empty. Please try again.");
+         }
+         else if(login.length() > 50) {
+            System.out.println("Username cannot be over 50 characters. Please try again.");
+         }
+         else {
+            // Check if username already exists
+            String checkUserQuery = String.format("SELECT login FROM Users WHERE login = '%s';", login);
+            List<List<String>> result = esql.executeQueryAndReturnResult(checkUserQuery);
+            if (!result.isEmpty()) {
+               System.out.println("Username already exists! Please choose a different one.");
+               continue;  // Go back to username entry
+            }
+            break;
+         }
+      }
+      
+      while(true) {
+         System.out.println("Enter a password: ");
+         password = in.readLine();
+         
+         // Check for exit command
+         if(password.equalsIgnoreCase("exit")) {
+            System.out.println("Returning to main menu...");
+            return;
+         }
+         
+         if(password.trim().isEmpty()) {
+            System.out.println("Password cannot be empty. Please try again.");
+            continue;
+         }
+         System.out.println("Confirm your password: ");
+         confirmPassword = in.readLine();
+         
+         // Check for exit command
+         if(confirmPassword.equalsIgnoreCase("exit")) {
+            System.out.println("Returning to main menu...");
+            return;
+         }
+
+         if(password.equals(confirmPassword)) {
+            break;
+         }
+         else {
+            System.out.println("The passwords do not match, please try again");
+         }
+      }
+      
+      while(true) {
+         System.out.println("Enter your phone number: ");
+         phoneNum = in.readLine();
+         
+         // Check for exit command
+         if(phoneNum.equalsIgnoreCase("exit")) {
+            System.out.println("Returning to main menu...");
+            return;
+         }
+         
+         if(phoneNum.trim().isEmpty()) {
+            System.out.println("Phone number cannot be empty. Please try again.");
+         }
+         else {
+            break;
+         }
+      }
+   
       try {
-         while(true) {
-            System.out.println("Please enter a username! (Maxiumum 50 characters)");
-            login = in.readLine();
-            if(login.trim().isEmpty()) {
-               System.out.println("Username cannot be empty. Please try again.");
-            }
-            else if(login.length() > 50) {
-               System.out.println("Username cannot be over 50 characters. Please try again.");
-            }
-            else {
-               break;
-            }
-         }
-         while(true) {
-            System.out.println("Enter a password: ");
-            password = in.readLine();
-            if(password.trim().isEmpty()) {
-               System.out.println("Password cannot be empty. Please try again.");
-               continue;
-            }
-            System.out.println("Confirm your password: ");
-            confirmPassword = in.readLine();
-
-            if(password.equals(confirmPassword)) {
-               break;
-            }
-            else {
-               System.out.println("The passwords do not match, please try again");
-            }
-         }
-         while(true) {
-            System.out.println("Enter your phone number: ");
-            phoneNum = in.readLine();
-            if(phoneNum.trim().isEmpty()) {
-               System.out.println("Phone number cannot be empty. Please try again.");
-            }
-            else {
-               break;
-            }
-         }
-      }
-      catch (Exception e) {
-        // Handle any exceptions (like input issues)
-        System.err.println("Error creating user: " + e.getMessage());
-      }
-      try{
          String query = String.format("INSERT INTO Users (login, password, role, favoriteItems, phoneNum) " +
-                                     "VALUES ('%s', '%s', '%s', '%s', '%s');",
-                                     login, password, role, favoriteItems, phoneNum);
+                                  "VALUES ('%s', '%s', '%s', '%s', '%s');",
+                                  login, password, role, favoriteItems, phoneNum);
          esql.executeUpdate(query);
          System.out.println("User created successfully!");
          System.out.println("Tip: After reviewing our menu, you can add your favorite items to your profile");
          System.out.println("by selecting the 'Update Profile' option from the main menu.");
       }
       catch (Exception e) {
-         System.err.println (e.getMessage ());
+         if (e.getMessage().contains("duplicate key value")) {
+            System.out.println("Error: This username already exists. Please choose another.");
+         } else {
+            System.err.println("Database Error: " + e.getMessage());
+         }
       }
    }
-
+   catch (Exception e) {
+      // Handle any exceptions (like input issues)
+      System.err.println("Error creating user: " + e.getMessage());
+   }
+}
    /*
     * Check log in credentials for an existing user
     * @return User login or null is the user does not exist
@@ -1390,32 +1433,48 @@ public class PizzaStore {
          
          switch (choice) {
             case 1:
-               // Update username (login)
-               System.out.print("Enter new username: ");
-               String newLogin = in.readLine().trim();
-               
-               // Check if the new username already exists
-               String checkLoginQuery = String.format(
-                  "SELECT login FROM Users WHERE login = '%s';",
-                  newLogin
-               );
-               
-               List<List<String>> loginResult = esql.executeQueryAndReturnResult(checkLoginQuery);
-               
-               if (!loginResult.isEmpty()) {
-                  System.out.println("Username already exists! Please choose a different username.");
-                  return;
-               }
-               
-               // Update username
-               String updateLoginQuery = String.format(
-                  "UPDATE Users SET login = '%s' WHERE login = '%s';",
-                  newLogin, targetUser
-               );
-               
-               esql.executeUpdate(updateLoginQuery);
-               System.out.println("Username updated successfully from '" + targetUser + "' to '" + newLogin + "'");
-               break;
+   // Update username (login)
+   System.out.print("Enter new username: ");
+   String newLogin = in.readLine().trim();
+   
+   // Check if the new username already exists
+   String checkLoginQuery = String.format(
+      "SELECT login FROM Users WHERE login = '%s';",
+      newLogin
+   );
+   
+   List<List<String>> loginResult = esql.executeQueryAndReturnResult(checkLoginQuery);
+   
+   if (!loginResult.isEmpty()) {
+      System.out.println("Username already exists! Please choose a different username.");
+      return;
+   }
+   
+   try {
+      // Begin by updating the orders
+      String updateOrdersQuery = String.format(
+         "UPDATE FoodOrder SET login = '%s' WHERE login = '%s';",
+         newLogin, targetUser
+      );
+      esql.executeUpdate(updateOrdersQuery);
+      
+      // Then update the user
+      String updateLoginQuery = String.format(
+         "UPDATE Users SET login = '%s' WHERE login = '%s';",
+         newLogin, targetUser
+      );
+      esql.executeUpdate(updateLoginQuery);
+      
+      System.out.println("Username updated successfully from '" + targetUser + "' to '" + newLogin + "'");
+   } catch (Exception e) {
+      if (e.getMessage().contains("duplicate key value")) {
+         // Check for unique constraint violation 
+         System.out.println("Error: This username already exists. Please choose another.");
+      } else {
+         System.err.println("Database Error: " + e.getMessage());
+      }
+   }
+   break;
                
             case 2:
                // Update password
