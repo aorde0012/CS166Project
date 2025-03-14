@@ -12,6 +12,10 @@ CREATE TABLE Users ( login varchar(50) NOT NULL,
                      PRIMARY KEY(login)
 );
 
+
+INSERT INTO Users (login, password, role, favoriteItems, phoneNum) 
+VALUES ('admin', 'admin123', 'manager', 'Nothing', '123456789');
+
 CREATE TABLE Items ( itemName varchar(50) NOT NULL,
                        ingredients varchar(300) NOT NULL,
                        typeOfItem varchar(30) NOT NULL,
