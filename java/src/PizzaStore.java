@@ -276,13 +276,11 @@ public class PizzaStore {
                 System.out.println("6. View Past 5 Order IDs");
                 System.out.println("7. View Order Information"); //user should specify orderID and then be able to see detailed information about the order
                 System.out.println("8. View Stores"); 
-
-                //**the following functionalities should only be able to be used by drivers & managers**
-                System.out.println("9. Update Order Status");
+                System.out.println("9. Manager / Driver Access Only");
 
                 //**the following functionalities should ony be able to be used by managers**
-                System.out.println("10. Update Menu");
-                System.out.println("11. Update User");
+                //System.out.println("10. Update Menu");
+                //System.out.println("11. Update User");
 
                 System.out.println(".........................");
                 System.out.println("20. Log out");
@@ -291,13 +289,14 @@ public class PizzaStore {
                    case 2: updateProfile(esql, authorisedUser); break;
                    case 3: viewMenu(esql); break;
                    case 4: placeOrder(esql, authorisedUser); break;
-                   case 5: viewAllOrders(esql); break;
-                   case 6: viewRecentOrders(esql); break;
-                   case 7: viewOrderInfo(esql); break;
+                   case 5: viewOwnOrders(esql, authorisedUser); break;
+                   case 6: viewOwnRecentOrders(esql, authorisedUser); break;
+                   case 7: viewOrderInfo(esql, authorisedUser); break;
                    case 8: viewStores(esql); break;
-                   case 9: updateOrderStatus(esql); break;
-                   case 10: updateMenu(esql); break;
-                   case 11: updateUser(esql); break;
+                   case 9: managerMenu(esql, authorisedUser); break;
+                   // Move to manager menu case 9: updateOrderStatus(esql); break;
+                   // Move to manager menu case 10: updateMenu(esql); break;
+                   // Move to manager menu case 11: updateUser(esql); break;
 
 
 
@@ -767,14 +766,574 @@ public class PizzaStore {
          return;
       }
    }
-   public static void viewAllOrders(PizzaStore esql) {}
-   public static void viewRecentOrders(PizzaStore esql) {}
-   public static void viewOrderInfo(PizzaStore esql) {}
-   public static void viewStores(PizzaStore esql) {}
-   public static void updateOrderStatus(PizzaStore esql) {}
-   public static void updateMenu(PizzaStore esql) {}
-   public static void updateUser(PizzaStore esql) {}
+
+   public static void viewOwnOrders(PizzaStore esql, String loggedInUser) {
+      if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+      }
+      try {
+         String ordersQuery = String.format("SELECT o.orderID, o.totalPrice, o.orderTimestamp, o.orderStatus, s.storeID, s.address " + 
+         "FROM FoodOrder o JOIN STORE s ON o.storeID = s.storeID " +
+         "WHERE o.login = '%s' " +
+         "ORDER BY o.orderTimestamp DESC; ",
+         loggedInUser);
+
+         List<List<String>> orders = esql.executeQueryAndReturnResult(ordersQuery);
+
+         int rowCount = orders.size();
+         if (rowCount == 0) {
+            System.out.println("No orders found for user: " + loggedInUser);
+         }
+         else {
+            System.out.println("\nFound " + rowCount + " orders for user: " + loggedInUser);
+         }
+
+         for (List<String> row : orders) {
+            System.out.println(row);
+         }
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   }
+
+   public static void viewOrders(PizzaStore esql) {
+      /*if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+         }
+         try {
+         String roleQuery = "SELECT role FROM Users WHERE login = '" + loggedInUser + "';";
+         List<List<String>> roleResult = esql.executeQueryAndReturnResult(roleQuery);
+      
+         if (roleResult.isEmpty()) {
+            System.out.println("User not found!");
+            return;
+         }
+      
+         String userRole = roleResult.get(0).get(0).trim();      
+         if (userRole.equals("manager") || userRole.equals("driver")) {
+            System.out.println("") // Ask which user to view orders for, find the user with query, print out orders 
+         }*/
+         try {
+         System.out.println("Which user would you like to view orders for?" );
+         String targetUser = in.readLine();
+
+         String ordersQuery = String.format("SELECT o.orderID, o.totalPrice, o.orderTimestamp, o.orderStatus, s.storeID, s.address " + 
+            "FROM FoodOrder o JOIN STORE s ON o.storeID = s.storeID " +
+            "WHERE o.login = '%s' " +
+            "ORDER BY o.orderTimestamp DESC;",
+            targetUser);
+
+         List<List<String>> orders = esql.executeQueryAndReturnResult(ordersQuery);
+
+         int rowCount = orders.size();
+         if (rowCount == 0) {
+            System.out.println("No orders found for user: " + targetUser);
+         }
+         else {
+            System.out.println("\nFound " + rowCount + " orders for user: " + targetUser);
+         }
+
+         for (List<String> row : orders) {
+            System.out.println(row);
+         }
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   } 
+
+   public static void viewOwnRecentOrders(PizzaStore esql, String loggedInUser) {
+      if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+      }
+      try {
+         String ordersQuery = String.format("SELECT o.orderID, o.totalPrice, o.orderTimestamp, o.orderStatus, s.storeID, s.address " + 
+         "FROM FoodOrder o JOIN STORE s ON o.storeID = s.storeID " +
+         "WHERE o.login = '%s' " +
+         "ORDER BY o.orderTimestamp DESC " +
+         "LIMIT 5;",
+         loggedInUser);
+
+         List<List<String>> orders = esql.executeQueryAndReturnResult(ordersQuery);
+
+         int rowCount = orders.size();
+         if (rowCount == 0) {
+            System.out.println("No orders found for user: " + loggedInUser);
+         }
+         else {
+            System.out.println("\nFound " + rowCount + " orders for user: " + loggedInUser);
+         }
+
+         for (List<String> row : orders) {
+            System.out.println(row);
+         }
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   }
+   public static void viewRecentOrders(PizzaStore esql, String loggedInUser) {
+      if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+      }
+      try {
+         /*String roleQuery = "SELECT role FROM Users WHERE login = '" + loggedInUser + "';";
+         List<List<String>> roleResult = esql.executeQueryAndReturnResult(roleQuery);
+      
+         if (roleResult.isEmpty()) {
+            System.out.println("User not found!");
+            return;
+         }
+      
+         String userRole = roleResult.get(0).get(0).trim();      
+         if (userRole.equals("manager") || userRole.equals("driver")) {
+            System.out.println("") // Ask which user to view orders for, find the user with query, print out orders 
+         }*/
+
+         System.out.println("Which user would you like to view orders for?" );
+         String targetUser = in.readLine();
+
+         String ordersQuery = String.format("SELECT o.orderID, o.totalPrice, o.orderTimestamp, o.orderStatus, s.storeID, s.address " + 
+         "FROM FoodOrder o JOIN STORE s ON o.storeID = s.storeID " +
+         "WHERE o.login = '%s' " +
+         "ORDER BY o.orderTimestamp DESC " +
+         "LIMIT 5;",
+         targetUser);
+
+         List<List<String>> orders = esql.executeQueryAndReturnResult(ordersQuery);
+
+         int rowCount = orders.size();
+         if (rowCount == 0) {
+            System.out.println("No orders found for user: " + targetUser);
+         }
+         else {
+            System.out.println("\nFound " + rowCount + " orders for user: " + targetUser);
+         }
+
+         for (List<String> row : orders) {
+            System.out.println(row);
+         }
+      }
+      catch (Exception e) {
+         System.err.println (e.getMessage ());
+         return;
+      }
+   }
+
+   public static void viewOrderInfo(PizzaStore esql, String loggedInUser) {
+   if (loggedInUser == null) {
+        System.out.println("Error: No user is logged in.");
+        return;
+   }
+   try {
+      // Check user's role first
+      String roleQuery = "SELECT role FROM Users WHERE login = '" + loggedInUser + "';";
+      List<List<String>> roleResult = esql.executeQueryAndReturnResult(roleQuery);
+      
+      if (roleResult.isEmpty()) {
+         System.out.println("User not found!");
+         return;
+      }
+      
+      String userRole = roleResult.get(0).get(0).trim();
+      
+      // Get the order ID to view
+      System.out.print("Enter Order ID to view details: ");
+      String orderIDStr = in.readLine().trim();
+      int orderID;
+      
+      try {
+         orderID = Integer.parseInt(orderIDStr);
+      } catch (NumberFormatException e) {
+         System.out.println("Invalid Order ID! Please enter a numeric value.");
+         return;
+      }
+      
+      // Check if the order exists and get the owner
+      String orderCheckQuery = String.format(
+         "SELECT orderID, login FROM FoodOrder WHERE orderID = %d;",
+         orderID
+      );
+      
+      List<List<String>> orderResult = esql.executeQueryAndReturnResult(orderCheckQuery);
+      
+      if (orderResult.isEmpty()) {
+         System.out.println("Order not found!");
+         return;
+      }
+      
+      // Get the user who placed the order
+      String orderOwner = orderResult.get(0).get(1);
+      
+      // Check permissions - only allow if it's the user's own order OR they are manager/driver
+      if (!orderOwner.equals(loggedInUser) && !userRole.equals("manager") && !userRole.equals("driver")) {
+         System.out.println("You don't have permission to view this order!");
+         return;
+      }
+      
+      // Get basic order information
+      String orderInfoQuery = String.format(
+         "SELECT o.orderID, o.login, o.totalPrice, o.orderTimestamp, o.orderStatus, " +
+         "s.storeID, s.address, s.city, s.state " +
+         "FROM FoodOrder o JOIN Store s ON o.storeID = s.storeID " +
+         "WHERE o.orderID = %d;",
+         orderID
+      );
+      
+      System.out.println("\n---- Order Information ----");
+      esql.executeQueryAndPrintResult(orderInfoQuery);
+      
+      // Get items in the order
+      String orderItemsQuery = String.format(
+         "SELECT io.itemName, io.quantity, i.price, (i.price * io.quantity) AS subtotal " +
+         "FROM ItemsInOrder io JOIN Items i ON io.itemName = i.itemName " +
+         "WHERE io.orderID = %d;",
+         orderID
+      );
+      
+      System.out.println("\n---- Items in Order ----");
+      esql.executeQueryAndPrintResult(orderItemsQuery);
+      
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+   }
+   }
+   public static void viewStores(PizzaStore esql) {
+      try {
+         System.out.println("\n---- Available Stores ----");
+         
+         String storesQuery = 
+            "SELECT storeID, address, city, state, isOpen, reviewScore " +
+            "FROM Store " +
+            "ORDER BY reviewScore DESC;";
+         
+         int rowCount = esql.executeQueryAndPrintResult(storesQuery);
+         
+         System.out.println("\nTotal stores: " + rowCount);
+      } catch (Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }   
+   
 
 
-}//end PizzaStore
+
+   public static void updateOrderStatus(PizzaStore esql) {
+      try {
+         System.out.print("Enter Order ID to update: ");
+         String orderIDStr = in.readLine().trim();
+         int orderID;
+      
+         try {
+            orderID = Integer.parseInt(orderIDStr);
+         } catch (NumberFormatException e) {
+         System.out.println("Invalid Order ID! Please enter a numeric value.");
+         return;
+         }
+      
+         // Check if the order exists
+         String orderCheckQuery = String.format(
+            "SELECT orderID, orderStatus FROM FoodOrder WHERE orderID = %d;",
+            orderID
+         );
+      
+         List<List<String>> orderResult = esql.executeQueryAndReturnResult(orderCheckQuery);
+      
+         if (orderResult.isEmpty()) {
+            System.out.println("Order not found!");
+            return;
+         }
+      
+         String currentStatus = orderResult.get(0).get(1).trim();
+         System.out.println("Current status: " + currentStatus);
+      
+         // Get new status
+         System.out.println("Select new status:");
+         System.out.println("1. Pending");
+         System.out.println("2. Preparing");
+         System.out.println("3. Ready");
+         System.out.println("4. Out for Delivery");
+         System.out.println("5. Delivered");
+         System.out.println("6. Cancelled");
+      
+         int choice = readChoice();
+         String newStatus;
+      
+         switch (choice) {
+            case 1: newStatus = "Pending"; break;
+            case 2: newStatus = "Preparing"; break;
+            case 3: newStatus = "Ready"; break;
+            case 4: newStatus = "Out for Delivery"; break;
+            case 5: newStatus = "Delivered"; break;
+            case 6: newStatus = "Cancelled"; break;
+            default: 
+               System.out.println("Invalid choice!");
+               return;
+         }
+      
+         // Update order status
+         String updateQuery = String.format(
+            "UPDATE FoodOrder SET orderStatus = '%s' WHERE orderID = %d;",
+            newStatus, orderID
+         );
+      
+         esql.executeUpdate(updateQuery);
+         System.out.println("Order status updated successfully!");
+      
+      } catch (Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+
+public static void updateMenu(PizzaStore esql) {
+   try {
+      System.out.println("\n---- Menu Management ----");
+      System.out.println("1. Add new item");
+      System.out.println("2. Update existing item");
+      System.out.println("3. Delete item");
+      System.out.println("4. Back to main menu");
+      
+      int choice = readChoice();
+      
+      switch (choice) {
+         case 1: addMenuItem(esql); break;
+         case 2: updateMenuItem(esql); break;
+         case 3: deleteMenuItem(esql); break;
+         case 4: return;
+         default: 
+            System.out.println("Invalid choice!");
+            return;
+      }
+      
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+   }
+}
+private static void addMenuItem(PizzaStore esql) {
+   try {
+      String itemName, ingredients, typeOfItem, description;
+      double price;
+      
+      System.out.println("\n---- Add New Menu Item ----");
+      
+      // Get item details
+      System.out.print("Enter item name: ");
+      itemName = in.readLine().trim();
+      
+      // Check if item already exists
+      String checkQuery = String.format(
+         "SELECT itemName FROM Items WHERE itemName = '%s';",
+         itemName
+      );
+      
+      List<List<String>> checkResult = esql.executeQueryAndReturnResult(checkQuery);
+      
+      if (!checkResult.isEmpty()) {
+         System.out.println("Item already exists! Please use update option instead.");
+         return;
+      }
+      
+      System.out.print("Enter ingredients (comma separated): ");
+      ingredients = in.readLine().trim();
+      
+      System.out.print("Enter type of item (e.g., pizza, drink, dessert): ");
+      typeOfItem = in.readLine().trim();
+      
+      System.out.print("Enter price: ");
+      try {
+         price = Double.parseDouble(in.readLine().trim());
+      } catch (NumberFormatException e) {
+         System.out.println("Invalid price! Please enter a numeric value.");
+         return;
+      }
+      
+      System.out.print("Enter description: ");
+      description = in.readLine().trim();
+      
+      // Insert new item
+      String insertQuery = String.format(
+         "INSERT INTO Items (itemName, ingredients, typeOfItem, price, description) " +
+         "VALUES ('%s', '%s', '%s', %.2f, '%s');",
+         itemName, ingredients, typeOfItem, price, description
+      );
+      
+      esql.executeUpdate(insertQuery);
+      System.out.println("Menu item added successfully!");
+      
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+   }
+}
+
+private static void updateMenuItem(PizzaStore esql) {
+   try {
+      String itemName;
+      
+      System.out.println("\n---- Update Menu Item ----");
+      
+      // Get item name
+      System.out.print("Enter item name to update: ");
+      itemName = in.readLine().trim();
+      
+      // Check if item exists
+      String checkQuery = String.format(
+         "SELECT * FROM Items WHERE itemName = '%s';",
+         itemName
+      );
+      
+      List<List<String>> checkResult = esql.executeQueryAndReturnResult(checkQuery);
+      
+      if (checkResult.isEmpty()) {
+         System.out.println("Item not found!");
+         return;
+      }
+      
+      // Display current item details
+      System.out.println("\nCurrent item details:");
+      esql.executeQueryAndPrintResult(checkQuery);
+      
+      // Update options
+      System.out.println("\nSelect field to update:");
+      System.out.println("1. Ingredients");
+      System.out.println("2. Type of item");
+      System.out.println("3. Price");
+      System.out.println("4. Description");
+      
+      int choice = readChoice();
+      String updateQuery = "";
+      
+      switch (choice) {
+         case 1:
+            System.out.print("Enter new ingredients: ");
+            String ingredients = in.readLine().trim();
+            updateQuery = String.format(
+               "UPDATE Items SET ingredients = '%s' WHERE itemName = '%s';",
+               ingredients, itemName
+            );
+            break;
+            
+         case 2:
+            System.out.print("Enter new type: ");
+            String typeOfItem = in.readLine().trim();
+            updateQuery = String.format(
+               "UPDATE Items SET typeOfItem = '%s' WHERE itemName = '%s';",
+               typeOfItem, itemName
+            );
+            break;
+            
+         case 3:
+            System.out.print("Enter new price: ");
+            try {
+               double price = Double.parseDouble(in.readLine().trim());
+               updateQuery = String.format(
+                  "UPDATE Items SET price = %.2f WHERE itemName = '%s';",
+                  price, itemName
+               );
+            } catch (NumberFormatException e) {
+               System.out.println("Invalid price! Please enter a numeric value.");
+               return;
+            }
+            break;
+            
+         case 4:
+            System.out.print("Enter new description: ");
+            String description = in.readLine().trim();
+            updateQuery = String.format(
+               "UPDATE Items SET description = '%s' WHERE itemName = '%s';",
+               description, itemName
+            );
+            break;
+            
+         default:
+            System.out.println("Invalid choice!");
+            return;
+      }
+      
+      esql.executeUpdate(updateQuery);
+      System.out.println("Menu item updated successfully!");
+      
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+   }
+}
+
+private static void deleteMenuItem(PizzaStore esql) {
+   try {
+      String itemName;
+      
+      System.out.println("\n---- Delete Menu Item ----");
+      
+      // Get item name
+      System.out.print("Enter item name to delete: ");
+      itemName = in.readLine().trim();
+      
+      // Check if item exists
+      String checkQuery = String.format(
+         "SELECT * FROM Items WHERE itemName = '%s';",
+         itemName
+      );
+      
+      List<List<String>> checkResult = esql.executeQueryAndReturnResult(checkQuery);
+      
+      if (checkResult.isEmpty()) {
+         System.out.println("Item not found!");
+         return;
+      }
+      
+      // Check if item is used in any orders
+      String orderCheckQuery = String.format(
+         "SELECT COUNT(*) FROM ItemsInOrder WHERE itemName = '%s';",
+         itemName
+      );
+      
+      List<List<String>> orderCheckResult = esql.executeQueryAndReturnResult(orderCheckQuery);
+      int orderCount = Integer.parseInt(orderCheckResult.get(0).get(0));
+      
+      if (orderCount > 0) {
+         System.out.println("Warning: This item is used in " + orderCount + " orders.");
+         System.out.print("Deleting this item will affect order history. Continue? (y/n): ");
+         String confirm = in.readLine().trim().toLowerCase();
+         
+         if (!confirm.equals("y")) {
+            System.out.println("Deletion cancelled.");
+            return;
+         }
+      }
+      
+      // Delete item
+      String deleteQuery = String.format(
+         "DELETE FROM Items WHERE itemName = '%s';",
+         itemName
+      );
+      
+      esql.executeUpdate(deleteQuery);
+      System.out.println("Menu item deleted successfully!");
+      
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+   }
+}
+
+
+
+public static void updateUser(PizzaStore esql) {} // Ali
+public static void managerMenu(PizzaStore esql, String loggedInUser) {}
+
+// in manager/driver menu:
+/*
+update menu
+updateorderstatus
+viewrecentorders
+vieworders
+updateUser*/
+
+} //end PizzaStore
 
